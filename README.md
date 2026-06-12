@@ -90,21 +90,25 @@ sudo yersinia -G
 
 ### Ataque corriendo en Yersinia para eliminar una VLAN
 ![Ataque eliminando VLAN](https://i.postimg.cc/L8hCnC3c/vtp-cap-2.png)
+![Ataque eliminando VLAN](https://i.postimg.cc/TYNQMjvk/vtp-cap-3.png)
+![Ataque eliminando VLAN](https://i.postimg.cc/DZ5LQF2c/vtp-cap-4.png)
 
 ---
 
 ### Resultado del ataque — eliminación de la VLAN
-![Resultado eliminación](insertar-link-de-)
+![Resultado eliminación](https://i.postimg.cc/nh7mRqFT/vtp-cap-5.png)
 
 ---
 
 ### Ataque corriendo en Yersinia para agregar una VLAN
-![Ataque agregando VLAN](insertar-link-de-imagen-aqui)
+![Ataque agregando VLAN](https://i.postimg.cc/qRm6hLLb/vtp-cap-6.png)
+![Ataque agregando VLAN](https://i.postimg.cc/fbDV8Fgs/vtp-cap-7.png)
+![Ataque agregando VLAN](https://i.postimg.cc/qRZgM7Bg/vtp-cap-8.png)
 
 ---
 
 ### Resultado del ataque — VLAN agregada
-![Resultado agregando VLAN](insertar-link-de-imagen-aqui)
+![Resultado agregando VLAN](https://i.postimg.cc/gcQrCrBV/vtp-cap-9.png)
 
 ---
 
@@ -140,7 +144,8 @@ SW1(config)# vtp mode transparent
 SW2(config)# vtp mode transparent
 ```
 
-![VTP Mode Transparent resultado](insertar-link-de-imagen-aqui)
+![VTP Mode Transparent resultado](https://i.postimg.cc/63T5SNrS/vtp-m-1.png)
+![VTP Mode Transparent resultado](https://i.postimg.cc/1RnDnkkw/vtp-m-2.png)
 
 ### 2. VTP Password
 Configura una contraseña en el dominio VTP. Sin la contraseña correcta el switch rechaza cualquier mensaje VTP externo.
@@ -150,25 +155,8 @@ SW1(config)# vtp password Elianny2026
 SW2(config)# vtp password Elianny2026
 ```
 
-![VTP Password resultado](insertar-link-de-imagen-aqui)
+![VTP Password resultado](https://i.postimg.cc/5tr6f02j/vtp-m-3.png)
 
-### 3. VTP Version 3
-La versión 3 tiene un Primary Server que es el único que puede hacer cambios. Cualquier otro dispositivo que intente modificar las VLANs es rechazado automáticamente.
-
-```
-SW1(config)# vtp version 3
-SW2(config)# vtp version 3
-```
-
-### 4. Deshabilitar VTP
-Si no necesitas sincronización automática de VLANs, desactívalo completamente.
-
-```
-SW1(config)# vtp mode off
-SW2(config)# vtp mode off
-```
-
----
 
 > ⚠️ *Este laboratorio fue realizado en un entorno controlado con fines educativos y de investigación.*  
 > ⚠️ *BY: Elianny*
