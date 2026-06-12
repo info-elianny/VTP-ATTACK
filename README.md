@@ -1,6 +1,6 @@
 # 🛡️ Ataque VTP (VLAN Trunking Protocol)
 
-📹 [Video demostración](insertar-link-aqui)
+📹 [Video demostración](https://youtu.be/zYQJRqLTaCk)
 
 ---
 
@@ -9,7 +9,7 @@
 Demostrar cómo un atacante puede manipular el protocolo VTP para agregar o eliminar VLANs en todos los switches de un dominio VTP, con el fin de observar el impacto que esta manipulación tiene sobre la segmentación y disponibilidad de la red.
 
 ### Topología de Red
-![Topología de Red](insertar-link-de-imagen-aqui)
+![Topología de Red](https://i.postimg.cc/7LfFrPRC/vtp-1.png)
 
 ---
 
@@ -84,17 +84,17 @@ sudo yersinia -G
 ## 📸 Capturas de Pantalla
 
 ### Tabla de VLANs antes del ataque
-![Tabla de VLANs antes del ataque](insertar-link-de-imagen-aqui)
+![Tabla de VLANs antes del ataque](https://i.postimg.cc/rsJnt7b2/vtp-cap-1.png)
 
 ---
 
 ### Ataque corriendo en Yersinia para eliminar una VLAN
-![Ataque eliminando VLAN](insertar-link-de-imagen-aqui)
+![Ataque eliminando VLAN](https://i.postimg.cc/L8hCnC3c/vtp-cap-2.png)
 
 ---
 
 ### Resultado del ataque — eliminación de la VLAN
-![Resultado eliminación](insertar-link-de-imagen-aqui)
+![Resultado eliminación](insertar-link-de-)
 
 ---
 
